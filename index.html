@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="薬剤投与設計用のCockcroft–Gault式による推定クレアチニンクリアランス（Ccr）計算機">
+  <meta name="theme-color" content="#0f766e">
+  <title>薬剤投与設計用 推定Ccr計算機</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <p class="eyebrow">RENAL FUNCTION • DRUG DOSING</p>
+      <h1>薬剤投与設計用 推定Ccr計算機</h1>
+      <p class="lead">Cockcroft–Gault式による推定クレアチニンクリアランス（Ccr）</p>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <section class="card input-card" aria-labelledby="input-title">
+      <div class="card-heading">
+        <h2 id="input-title">患者情報</h2>
+        <span class="badge">ブラウザ内で計算</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="age">年齢 <span>歳</span></label>
+          <input id="age" name="age" type="number" min="18" max="120" step="1" inputmode="numeric" autocomplete="off" placeholder="例：75">
+        </div>
+
+        <div class="field">
+          <label for="sex">性別</label>
+          <select id="sex" name="sex">
+            <option value="male">男性</option>
+            <option value="female">女性</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="height">身長 <span>cm</span></label>
+          <input id="height" name="height" type="number" min="100" max="250" step="0.1" inputmode="decimal" autocomplete="off" placeholder="例：165">
+        </div>
+
+        <div class="field">
+          <label for="weight">実測体重（ABW） <span>kg</span></label>
+          <input id="weight" name="weight" type="number" min="1" max="400" step="0.1" inputmode="decimal" autocomplete="off" placeholder="例：68">
+        </div>
+
+        <div class="field field-wide">
+          <label for="scr">血清Cr（Scr） <span>mg/dL</span></label>
+          <input id="scr" name="scr" type="number" min="0.01" max="30" step="0.01" inputmode="decimal" autocomplete="off" placeholder="例：1.02">
+        </div>
+      </div>
+
+      <fieldset class="choice-group">
+        <legend>C-G式に使用する体重</legend>
+        <label class="radio-row">
+          <input type="radio" name="weightMode" value="abw" checked>
+          <span><strong>実測体重（ABW）</strong><small>入力した実測体重を使用</small></span>
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="weightMode" value="ibw">
+          <span><strong>理想体重（IBW）</strong><small>Devine式</small></span>
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="weightMode" value="adjbw">
+          <span><strong>補正体重（AdjBW）</strong><small>IBW + 0.4 × (ABW − IBW)</small></span>
+        </label>
+      </fieldset>
+
+      <fieldset class="choice-group">
+        <legend>Scrの扱い</legend>
+        <label class="radio-row">
+          <input type="radio" name="scrAdjust" value="none" checked>
+          <span><strong>入力値をそのまま使用</strong></span>
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="scrAdjust" value="plus02">
+          <span><strong>Scr + 0.2 mg/dL</strong><small>酵素法Crを使用する場合の補正を選択肢として表示</small></span>
+        </label>
+      </fieldset>
+
+      <div class="button-row">
+        <button id="calculateBtn" class="primary-btn" type="button">推定Ccrを計算</button>
+        <button id="resetBtn" class="secondary-btn" type="button">クリア</button>
+      </div>
+
+      <p id="inputError" class="error" role="alert" hidden></p>
+    </section>
+
+    <section id="resultCard" class="card result-card" aria-labelledby="result-title" hidden>
+      <div class="result-label" id="result-title">推定Ccr</div>
+      <div class="result-value"><span id="ccrValue">—</span><span class="result-unit">mL/min</span></div>
+      <div id="ccrClass" class="result-class"></div>
+      <p class="result-note">Cockcroft–Gault式による推定値です。実測Ccrではありません。</p>
+
+      <div class="summary-grid">
+        <div><span>年齢</span><strong id="summaryAge">—</strong></div>
+        <div><span>性別</span><strong id="summarySex">—</strong></div>
+        <div><span>身長</span><strong id="summaryHeight">—</strong></div>
+        <div><span>実測体重（ABW）</span><strong id="summaryAbw">—</strong></div>
+        <div><span>理想体重（IBW）</span><strong id="summaryIbw">—</strong></div>
+        <div><span>補正体重（AdjBW）</span><strong id="summaryAdjbw">—</strong></div>
+        <div class="full"><span>C-G式に使用した体重</span><strong id="summaryUsedWeight">—</strong></div>
+        <div><span>入力Scr</span><strong id="summaryScr">—</strong></div>
+        <div><span>計算に使用したScr</span><strong id="summaryUsedScr">—</strong></div>
+      </div>
+
+      <div class="button-row">
+        <button id="copyBtn" class="secondary-btn" type="button">結果をコピー</button>
+        <button id="shareBtn" class="secondary-btn" type="button">この条件を共有</button>
+      </div>
+      <p id="actionStatus" class="status" aria-live="polite"></p>
+    </section>
+
+    <section id="warningCard" class="card warning-card" aria-labelledby="warning-title" hidden>
+      <div class="card-heading">
+        <h2 id="warning-title">入力値からの注意</h2>
+      </div>
+      <div id="dynamicWarnings"></div>
+    </section>
+
+    <section class="card" aria-labelledby="body-title">
+      <div class="card-heading">
+        <h2 id="body-title">体重の計算</h2>
+        <span class="badge neutral">薬剤・患者背景により選択</span>
+      </div>
+      <div class="formula-box">
+        <div><strong>IBW（Devine式）</strong><br>男性：50 + 2.3 ×（身長 inch − 60）<br>女性：45.5 + 2.3 ×（身長 inch − 60）</div>
+        <div><strong>AdjBW</strong><br>IBW + 0.4 ×（ABW − IBW）</div>
+      </div>
+      <p class="muted">肥満患者では実測体重をそのままCockcroft–Gault式に使用するとCcrを過大評価することがあります。ただし、肥満だから必ずIBW・AdjBWを使うという一律のルールではありません。薬剤の添付文書、臨床研究、患者背景を確認してください。</p>
+    </section>
+
+    <section class="card" aria-labelledby="notes-title">
+      <div class="card-heading">
+        <h2 id="notes-title">薬剤投与設計上の注意</h2>
+      </div>
+      <div class="notice-list">
+        <div class="notice warning"><strong>Scr +0.2 mg/dL</strong><br>Jaffe法との測定法差を考慮して酵素法Crに0.2 mg/dLを加える方法が記載されています。一方、薬剤の添付文書や資料によっては補正しないScrを用います。目的と薬剤の記載に従ってください。</div>
+        <div class="notice"><strong>低Scr</strong><br>Scrを0.8 mg/dL等へ自動的に切り上げる処理は行っていません。低Scrでは筋肉量低下などにより腎機能を過大評価する可能性があります。</div>
+        <div class="notice"><strong>AKIなど</strong><br>血清Crが急速に変化している場合、Cockcroft–Gault式を含む定常状態を前提とした推算式の精度が低下します。</div>
+        <div class="notice"><strong>実測Ccr</strong><br>本サイトは推定Ccrを算出するもので、24時間蓄尿による実測Ccrではありません。</div>
+        <div class="notice"><strong>薬剤別投与量</strong><br>第1版では薬剤別の具体的な投与量を自動提示しません。薬剤ごとの腎機能指標・閾値・用量・投与間隔は添付文書等で確認してください。</div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="egfr-title">
+      <div class="card-heading">
+        <h2 id="egfr-title">CcrとeGFRの違い</h2>
+      </div>
+      <p>ここで算出するのは<strong>Cockcroft–Gault式による推定Ccr（mL/min）</strong>です。eGFRは通常<strong>mL/min/1.73m²</strong>で表され、体表面積で標準化されています。</p>
+      <p>薬剤投与設計でどの腎機能指標を用いるべきかは薬剤によって異なります。CcrとeGFRを自己判断で置き換えないでください。体表面積未補正eGFRを用いる場合も、薬剤や目的に応じた判断が必要です。</p>
+    </section>
+
+    <section class="card" aria-labelledby="formula-title">
+      <div class="card-heading">
+        <h2 id="formula-title">Cockcroft–Gault式</h2>
+      </div>
+      <div class="formula-box formula-main">
+        <strong>男性</strong><br>
+        Ccr = (140 − 年齢) × 体重（kg） ÷ [72 × Scr（mg/dL）]
+        <hr>
+        <strong>女性</strong><br>
+        上記 × 0.85
+      </div>
+      <p class="muted">原著：Cockcroft DW, Gault MH. Prediction of creatinine clearance from serum creatinine. Nephron. 1976;16(1):31-41. doi:10.1159/000180580.</p>
+    </section>
+
+    <section class="card" aria-labelledby="reference-title">
+      <div class="card-heading">
+        <h2 id="reference-title">参考資料</h2>
+      </div>
+      <ul class="reference-list">
+        <li><a href="https://pubmed.ncbi.nlm.nih.gov/1244564/" target="_blank" rel="noopener">Cockcroft &amp; Gault 原著（PubMed）</a></li>
+        <li><a href="https://www.pmda.go.jp/files/000239906.pdf" target="_blank" rel="noopener">PMDA：クレアチニン・クリアランスによる腎機能評価</a></li>
+        <li><a href="https://www.jsn.or.jp/academicinfo/report/CKD-guideline2016.pdf" target="_blank" rel="noopener">日本腎臓学会：CKD診療ガイドライン2016（CCr・eGFRの解説）</a></li>
+      </ul>
+    </section>
+
+    <footer class="site-footer">
+      <p>本サイトは計算補助を目的としています。患者個人の診療判断や薬剤投与量の決定は、各薬剤の最新の添付文書、ガイドライン、施設基準等を確認して行ってください。</p>
+      <p>入力値はサーバーへ送信せず、ブラウザ内でのみ計算します。</p>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
