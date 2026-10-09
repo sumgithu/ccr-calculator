@@ -113,3 +113,48 @@ button { min-height: 46px; border: 0; border-radius: 10px; padding: 10px 16px; f
   .button-row { flex-direction: column; }
   .summary-grid > div { min-height: 60px; }
 }
+
+
+/* スマートフォン用：入力中も推定Ccrを画面下部に表示 */
+.mobile-ccr-bar {
+  display: none;
+}
+@media (max-width: 600px) {
+  body { padding-bottom: 104px; }
+  .mobile-ccr-bar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    padding: 9px 16px calc(9px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,.97);
+    border-top: 1px solid #99d4ce;
+    box-shadow: 0 -5px 18px rgba(16,24,40,.13);
+    backdrop-filter: blur(8px);
+  }
+  .mobile-ccr-label {
+    color: var(--accent-dark);
+    font-size: .76rem;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+  .mobile-ccr-value {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: var(--accent-dark);
+    line-height: 1.2;
+  }
+  .mobile-ccr-value strong {
+    font-size: 1.65rem;
+    font-weight: 900;
+  }
+  .mobile-ccr-value span { font-size: .82rem; font-weight: 700; }
+  .mobile-ccr-status {
+    color: var(--muted);
+    font-size: .72rem;
+    line-height: 1.25;
+  }
+}
