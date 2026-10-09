@@ -23,7 +23,9 @@
     summaryUsedWeight: $('summaryUsedWeight'),
     summaryScr: $('summaryScr'),
     summaryUsedScr: $('summaryUsedScr'),
-    actionStatus: $('actionStatus')
+    actionStatus: $('actionStatus'),
+    mobileCcrValue: $('mobileCcrValue'),
+    mobileCcrStatus: $('mobileCcrStatus')
   };
 
   let lastResult = null;
@@ -136,6 +138,8 @@
       els.inputError.hidden = false;
       els.resultCard.hidden = true;
       els.warningCard.hidden = true;
+      els.mobileCcrValue.textContent = '—';
+      els.mobileCcrStatus.textContent = error;
       return;
     }
 
@@ -167,6 +171,8 @@
     };
 
     els.ccrValue.textContent = format1(rounded);
+    els.mobileCcrValue.textContent = format1(rounded);
+    els.mobileCcrStatus.textContent = `使用体重：${format1(usedWeight)} kg ／ Scr：${format2(usedScr)} mg/dL`;
     els.ccrClass.textContent = classifyCcr(rounded);
     els.summaryAge.textContent = `${age} 歳`;
     els.summarySex.textContent = sex === 'male' ? '男性' : '女性';
@@ -247,6 +253,8 @@
     document.querySelector('input[name="scrAdjust"][value="none"]').checked = true;
     els.resultCard.hidden = true;
     els.warningCard.hidden = true;
+    els.mobileCcrValue.textContent = '—';
+    els.mobileCcrStatus.textContent = '年齢・身長・体重・Scrを入力';
     els.actionStatus.textContent = '';
     lastResult = null;
     clearError();
@@ -259,6 +267,10 @@
   $('shareBtn').addEventListener('click', shareState);
   $('resetBtn').addEventListener('click', reset);
   document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', () => {
+      if (['age','height','weight','scr'].includes(el.id) || el.name === 'weightMode' || el.name === 'scrAdjust' || el.id === 'sex') calculate();
+    });
+    el.addEventListener('change', () => calculate());
     el.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') calculate();
     });
