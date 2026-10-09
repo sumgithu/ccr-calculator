@@ -268,9 +268,18 @@
   $('resetBtn').addEventListener('click', reset);
   document.querySelectorAll('input, select').forEach(el => {
     el.addEventListener('input', () => {
-      if (['age','height','weight','scr'].includes(el.id) || el.name === 'weightMode' || el.name === 'scrAdjust' || el.id === 'sex') calculate();
+      const allFilled = ['age','height','weight','scr'].every(id => $(id).value.trim() !== '');
+      if (allFilled) calculate();
+      else {
+        clearError();
+        els.mobileCcrValue.textContent = '—';
+        els.mobileCcrStatus.textContent = '年齢・身長・体重・Scrを入力';
+      }
     });
-    el.addEventListener('change', () => calculate());
+    el.addEventListener('change', () => {
+      const allFilled = ['age','height','weight','scr'].every(id => $(id).value.trim() !== '');
+      if (allFilled) calculate();
+    });
     el.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') calculate();
     });
